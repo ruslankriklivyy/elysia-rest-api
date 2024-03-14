@@ -1,0 +1,129 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int            @id @default(autoincrement())
+  name          String
+  email         String         @unique
+  password      String
+  tasks         Task[]
+  tokens        Token[]
+  messages      Message[]
+  notifications Notification[]
+  chats         ChatsUsers[]
+  files         File[]
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @default(now())
+
+  @@map("users")
+}
+
+model Notification {
+  id                Int              @id @default(autoincrement())
+  body              String
+  notification_type NotificationType
+  user              User?            @relation(fields: [user_id], references: [id])
+  user_id           Int?
+  created_at        DateTime         @default(now())
+  updated_at        DateTime         @default(now())
+
+  @@map("notifications")
+}
+
+model Token {
+  id           Int      @id @default(autoincrement())
+  access_token String
+  user         User?    @relation(fields: [user_id], references: [id])
+  user_id      Int?
+  created_at   DateTime @default(now())
+  updated_at   DateTime @default(now())
+
+  @@map("tokens")
+}
+
+model Task {
+  id           Int      @id @default(autoincrement())
+  name         String
+  description  String?
+  end_date     DateTime
+  is_completed Boolean  @default(false)
+  files        File[]
+  user         User?    @relation(fields: [user_id], references: [id])
+  user_id      Int?
+  created_at   DateTime @default(now())
+  updated_at   DateTime @default(now())
+
+  @@map("tasks")
+}
+
+model Chat {
+  id         Int          @id @default(autoincrement())
+  name       String
+  members    ChatsUsers[]
+  messages   Message[]
+  created_at DateTime     @default(now())
+  updated_at DateTime     @default(now())
+
+  @@map("chats")
+}
+
+model ChatsUsers {
+  user       User     @relation(fields: [user_id], references: [id])
+  user_id    Int
+  chat       Chat     @relation(fields: [chat_id], references: [id])
+  chat_id    Int
+  assignedAt DateTime @default(now())
+  assignedBy String
+
+  @@id([user_id, chat_id])
+  @@map("chats_users")
+}
+
+model Message {
+  id         Int      @id @default(autoincrement())
+  body       String
+  chat       Chat     @relation(fields: [chat_id], references: [id])
+  chat_id    Int
+  sender     User     @relation(fields: [sender_id], references: [id])
+  sender_id  Int
+  files      File[]
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+
+  @@map("messages")
+}
+
+model File {
+  id         Int      @id @default(autoincrement())
+  name       String
+  url        String
+  type       String
+  size       Float
+  user       User     @relation(fields: [user_id], references: [id])
+  user_id    Int
+  task       Task?    @relation(fields: [task_id], references: [id])
+  task_id    Int?
+  message    Message? @relation(fields: [message_id], references: [id])
+  message_id Int?
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+
+  @@map("files")
+}
+
+enum NotificationType {
+  NEW_CHAT
+  NEW_MESSAGE
+}
