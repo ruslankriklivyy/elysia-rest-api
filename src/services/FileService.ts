@@ -1,13 +1,30 @@
 import { PrismaClient } from "@prisma/client";
+import { unlink } from "node:fs/promises";
+import randomstring from "randomstring";
 
 import type { CreateFilePayload } from "@/types/entities/file/CreateFilePayload";
 import { FileType } from "@/enums/FileType";
 
 class FileService {
   private readonly prisma = new PrismaClient();
+  private readonly uploadsPath = "./uploads";
 
-  create = (payload: CreateFilePayload) => {
-    return this.prisma.file.create({ data: payload });
+  create = async ({ file, user_id }: CreateFilePayload) => {
+    const arrayBuffer = await file.arrayBuffer();
+    const filePath = `${this.uploadsPath}/${randomstring.generate(12)}-${file.name}`;
+    const fileUrl = filePath.replace(this.uploadsPath, "");
+
+    await Bun.write(filePath, arrayBuffer);
+
+    return await this.prisma.file.create({
+      data: {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        url: fileUrl,
+        user_id,
+      },
+    });
   };
 
   attachMany = (filesIds: number[], entityType: FileType, entityId: number) => {
@@ -32,10 +49,18 @@ class FileService {
     });
   };
 
-  delete = (fileId: number, userId: number) => {
-    return this.prisma.file.delete({
+  delete = async (fileId: number, userId: number) => {
+    const file = await this.prisma.file.findUnique({ where: { id: fileId } });
+
+    if (!file) throw Error("File not found");
+
+    const deletedFile = await this.prisma.file.delete({
       where: { id: fileId, user_id: userId },
     });
+
+    await unlink(file.url);
+
+    return deletedFile;
   };
 }
 

@@ -7,6 +7,9 @@ import { AuthMiddleware } from "./middlewares/AuthMiddleware";
 import { createSocket } from "./core/socket";
 import { createTaskRoutes } from "./routes/TaskRoutes";
 import { createChatsRoutes } from "./routes/ChatRoutes";
+import { createMessageRoutes } from "./routes/MessageRoutes";
+import { createUserRoutes } from "./routes/UserRoutes";
+import { createFileRoutes } from "./routes/FileRoutes";
 
 const socket = createSocket();
 
@@ -29,6 +32,9 @@ const app = new Elysia()
       .use(AuthMiddleware)
       .group("/tasks", (app) => createTaskRoutes(app, socket))
       .group("/chats", (app) => createChatsRoutes(app, socket))
+      .group("/messages", (app) => createMessageRoutes(app, socket))
+      .group("/users", (app) => createUserRoutes(app))
+      .group("/files", (app) => createFileRoutes(app))
   )
   .listen(3000);
 
