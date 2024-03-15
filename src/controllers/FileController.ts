@@ -5,8 +5,10 @@ import { ExtendedContext } from "@/types/common/ExtendedContext";
 import { CreateFilePayload } from "@/types/entities/file/CreateFilePayload";
 
 class FileController {
+  private readonly uploadPath = "uploads/";
+
   stream = ({ params }: Context) => {
-    return Bun.file(`uploads/${params["path"]}`);
+    return Bun.file(`${this.uploadPath}${params["path"]}`);
   };
 
   createOne = async ({ body, user, set }: ExtendedContext) => {

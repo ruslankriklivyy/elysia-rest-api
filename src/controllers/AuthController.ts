@@ -17,7 +17,7 @@ class AuthController {
         },
       });
 
-      const jwtAccessToken = jwt.sign(
+      const jwtAccessToken = await jwt.sign(
         {
           data: {
             id: newUser.id,
