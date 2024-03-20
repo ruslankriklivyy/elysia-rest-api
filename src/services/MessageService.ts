@@ -4,11 +4,26 @@ import type { CreateMessagePayload } from "@/types/entities/message/CreateMessag
 import FileService from "@/services/FileService";
 import { FileType } from "@/enums/FileType";
 
+interface FindOneMessagePayload {
+  id: number;
+  userId?: number;
+}
+
 class MessageService {
   private prisma = new PrismaClient();
 
   findAllByChat = (chatId: number) => {
     return this.prisma.message.findMany({ where: { chat_id: chatId } });
+  };
+
+  findOne = ({ id, userId }: FindOneMessagePayload) => {
+    const where: Record<string, any> = {};
+
+    if (userId) {
+      where["user_id"] = userId;
+    }
+
+    return this.prisma.message.findUnique({ where: { id, ...where } });
   };
 
   createOne = async (payload: CreateMessagePayload) => {

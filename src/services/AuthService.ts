@@ -33,15 +33,11 @@ class AuthService {
     }
   }
 
-  async logout(accessToken: string) {
+  async logout(userId: number) {
     try {
-      const token = await this.prisma.token.findFirst({
-        where: { access_token: accessToken },
+      await this.prisma.token.deleteMany({
+        where: { user_id: userId },
       });
-
-      if (!token) return;
-
-      await this.prisma.token.delete({ where: { id: token.id } });
 
       return "User is logout";
     } catch (error) {

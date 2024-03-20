@@ -5,6 +5,7 @@ import type { UpdateTaskPayload } from "@/types/entities/task/UpdateTaskPayload"
 
 interface FindOneTaskPayload {
   taskId: number;
+  userId?: number;
 }
 
 interface FindAllTasksPayload {
@@ -14,8 +15,14 @@ interface FindAllTasksPayload {
 class TaskService {
   private readonly prisma = new PrismaClient();
 
-  findOne({ taskId }: FindOneTaskPayload) {
-    return this.prisma.task.findUnique({ where: { id: taskId } });
+  findOne({ taskId, userId }: FindOneTaskPayload) {
+    let where: Record<string, any> = {};
+
+    if (userId) {
+      where["user_id"] = userId;
+    }
+
+    return this.prisma.task.findUnique({ where: { ...where, id: taskId } });
   }
 
   findAll(payload: FindAllTasksPayload) {

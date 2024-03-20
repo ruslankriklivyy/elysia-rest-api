@@ -12,9 +12,10 @@ import { createFileRoutes } from "./routes/FileRoutes";
 import { createNotificationRoutes } from "./routes/NotificationRoutes";
 import { createAuthRoutes } from "@/routes/AuthRoutes";
 
+const app = new Elysia();
 const socket = createSocket();
 
-const app = new Elysia()
+app
   .group("/api", (app) =>
     app
       .use(

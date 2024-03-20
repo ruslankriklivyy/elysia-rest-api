@@ -1,9 +1,10 @@
 import { PrismaClient } from "@prisma/client";
+import { difference } from "lodash";
 
 import type { CreateChatsUsersPayload } from "@/types/entities/chatsUsers/CreateChatsUsersPayload";
 
 class ChatsUsersService {
-  private prismaClient = new PrismaClient();
+  private readonly prismaClient = new PrismaClient();
 
   findAllByUser = (userId: number) => {
     return this.prismaClient.chatsUsers.findMany({
@@ -12,26 +13,44 @@ class ChatsUsersService {
     });
   };
 
-  createMany = async (payload: CreateChatsUsersPayload) => {
+  upsert = async (payload: CreateChatsUsersPayload) => {
     if (!payload?.membersIds) throw Error("membersIds not provided");
 
     try {
-      const newChatsUsers = payload.membersIds.map((memberId) => ({
-        user_id: memberId,
-        chat_id: payload.chatId,
-        assignedBy: "user",
-      }));
-      await this.prismaClient.chatsUsers.createMany({
-        data: newChatsUsers,
+      const chatsUsers = await this.prismaClient.chatsUsers.findMany({
+        where: { chat_id: payload.chatId },
       });
+      const existingChatUsersIds = chatsUsers.map(({ user_id }) => user_id);
+      const newMembersIds = difference(
+        payload.membersIds,
+        existingChatUsersIds
+      );
+      const deletedMembersIds = difference(
+        existingChatUsersIds,
+        payload.membersIds
+      );
+
+      if (newMembersIds.length) {
+        await this.prismaClient.chatsUsers.createMany({
+          data: newMembersIds.map((memberId) => ({
+            chat_id: payload.chatId,
+            user_id: memberId,
+            assignedBy: "user",
+          })),
+        });
+      }
+
+      if (deletedMembersIds.length) {
+        await this.deleteMany(payload.chatId, deletedMembersIds);
+      }
     } catch (error) {
       throw Error(error as any);
     }
   };
 
-  deleteMany = (chatId: number, userIds: number[]) => {
+  deleteMany = (chatId: number, membersIds: number[]) => {
     return this.prismaClient.chatsUsers.deleteMany({
-      where: { chat_id: chatId, user_id: { in: userIds } },
+      where: { chat_id: chatId, user_id: { in: membersIds } },
     });
   };
 }

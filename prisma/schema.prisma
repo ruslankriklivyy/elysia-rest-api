@@ -129,5 +129,6 @@ enum NotifiableType {
   NEW_CHAT
   NEW_MESSAGE
   NEW_TASK
+  NEW_CHAT_MEMBER
   REMOVE_TASK
 }

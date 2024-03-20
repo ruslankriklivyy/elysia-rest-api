@@ -9,6 +9,7 @@ class ChatService {
   findAllByUser = (userId: number) => {
     return this.prismaClient.chat.findMany({
       where: { members: { some: { user_id: userId } } },
+      include: { members: { include: { user: true } } },
     });
   };
 

@@ -38,7 +38,7 @@ class ChatController {
         name: (body as CreateChatPayload).name,
       });
 
-      await ChatsUsersService.createMany({
+      await ChatsUsersService.upsert({
         chatId: newChat.id,
         membersIds: (body as CreateChatPayload).members_ids,
       });
@@ -56,9 +56,13 @@ class ChatController {
     }
   };
 
-  updateOne = async ({ body, set, params, user }: ExtendedContext) => {
+  updateOne = async ({ body, set, params }: ExtendedContext) => {
     try {
       const chatId = +params["id"];
+      await ChatsUsersService.upsert({
+        chatId,
+        membersIds: (body as UpdateChatPayload).members_ids,
+      });
       return await ChatService.updateOne(chatId, {
         name: (body as UpdateChatPayload).name,
       });

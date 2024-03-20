@@ -1,6 +1,6 @@
 import { t } from "elysia";
 
 export default t.Object({
-  name: t.String(),
-  members_ids: t.Array(t.Number()),
+  name: t.Optional(t.String()),
+  members_ids: t.Optional(t.Array(t.Number())),
 });

@@ -87,10 +87,10 @@ class AuthController {
     }
   };
 
-  logout = async ({ cookie, removeCookie }: ExtendedContext) => {
+  logout = async ({ removeCookie, user }: ExtendedContext) => {
     try {
-      await AuthService.logout(cookie.access_token);
       removeCookie("access_token");
+      return await AuthService.logout(user.id);
     } catch (error) {
       console.log(error);
     }
