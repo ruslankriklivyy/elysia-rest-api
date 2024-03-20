@@ -7,6 +7,5 @@ import SignInValidation from "@/helpers/validations/auth/SignInValidation";
 export const createAuthRoutes = (app: Elysia<"/api/auth">) => {
   return app
     .post("/sign-up", AuthController.signUp, { body: SignUpValidation })
-    .post("/sign-in", AuthController.signIn, { body: SignInValidation })
-    .post("/logout", AuthController.logout);
+    .post("/sign-in", AuthController.signIn, { body: SignInValidation });
 };

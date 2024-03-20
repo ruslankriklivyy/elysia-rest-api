@@ -11,6 +11,7 @@ import { createUserRoutes } from "./routes/UserRoutes";
 import { createFileRoutes } from "./routes/FileRoutes";
 import { createNotificationRoutes } from "./routes/NotificationRoutes";
 import { createAuthRoutes } from "@/routes/AuthRoutes";
+import AuthController from "@/controllers/AuthController";
 
 const app = new Elysia();
 const socket = createSocket();
@@ -27,6 +28,7 @@ app
       .use(cookie())
       .group("/auth", (app) => createAuthRoutes(app))
       .use(AuthMiddleware)
+      .post("/auth/logout", AuthController.logout)
       .group("/tasks", (app) => createTaskRoutes(app, socket))
       .group("/chats", (app) => createChatsRoutes(app, socket))
       .group("/messages", (app) => createMessageRoutes(app, socket))

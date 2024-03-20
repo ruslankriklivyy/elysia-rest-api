@@ -35,6 +35,7 @@ class AuthService {
 
   async logout(userId: number) {
     try {
+      console.log("user id", userId);
       await this.prisma.token.deleteMany({
         where: { user_id: userId },
       });
