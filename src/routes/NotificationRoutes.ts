@@ -3,6 +3,7 @@ import { Server } from "socket.io";
 
 import NotificationService from "@/services/NotificationService";
 import NotificationController from "@/controllers/NotificationController";
+import UpdateNotificationValidation from "@/helpers/validations/notifications/UpdateNotificationValidation";
 
 export const createNotificationRoutes = (
   app: Elysia<"/api/notifications">,
@@ -13,5 +14,7 @@ export const createNotificationRoutes = (
 
   return app
     .get("/", NotificationCtrl.findAll)
-    .patch("/:id", NotificationCtrl.updateOne);
+    .patch("/:id", NotificationCtrl.updateOne, {
+      body: UpdateNotificationValidation,
+    });
 };
