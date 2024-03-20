@@ -11,9 +11,12 @@ export const AuthMiddleware = (app: Elysia) =>
     try {
       const accessToken = cookie?.access_token;
       const { data: user } = await jwt.verify(accessToken);
+
+      if (!user) throw Error();
+
       const userById = await UserService.findOne({ email: user.email });
 
-      if (!user || !userById || !accessToken) throw Error();
+      if (!userById || !accessToken) throw Error();
 
       const token = await TokenService.findOne({ accessToken });
 

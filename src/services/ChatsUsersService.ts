@@ -16,19 +16,23 @@ class ChatsUsersService {
     if (!payload?.membersIds) throw Error("membersIds not provided");
 
     try {
-      for (const memberId of payload.membersIds) {
-        await this.prismaClient.chatsUsers.create({
-          data: {
-            user_id: memberId,
-            chat_id: payload.chatId,
-            assignedBy: "user",
-          },
-        });
-      }
+      const newChatsUsers = payload.membersIds.map((memberId) => ({
+        user_id: memberId,
+        chat_id: payload.chatId,
+        assignedBy: "user",
+      }));
+      await this.prismaClient.chatsUsers.createMany({
+        data: newChatsUsers,
+      });
     } catch (error) {
-      console.log(error);
-      throw Error();
+      throw Error(error as any);
     }
+  };
+
+  deleteMany = (chatId: number, userIds: number[]) => {
+    return this.prismaClient.chatsUsers.deleteMany({
+      where: { chat_id: chatId, user_id: { in: userIds } },
+    });
   };
 }
 

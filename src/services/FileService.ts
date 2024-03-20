@@ -16,7 +16,7 @@ class FileService {
 
     await Bun.write(filePath, arrayBuffer);
 
-    return await this.prisma.file.create({
+    return this.prisma.file.create({
       data: {
         name: file.name,
         size: file.size,

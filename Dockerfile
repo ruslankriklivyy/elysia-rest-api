@@ -37,4 +37,4 @@ ENTRYPOINT ["./docker-entrypoint.sh"]
 
 CMD ["./bun", "src/index.ts"]
 
-EXPOSE 3000
+EXPOSE ${PORT} ${WS_PORT}

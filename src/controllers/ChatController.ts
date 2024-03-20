@@ -1,16 +1,16 @@
-import type { Server } from "socket.io";
-
 import ChatService from "@/services/ChatService";
 import ChatsUsersService from "@/services/ChatsUsersService";
 import { ExtendedContext } from "@/types/common/ExtendedContext";
-import { CHATS_EVENTS } from "@/enums/SocketEvent";
 import { CreateChatPayload } from "@/types/entities/chat/CreateChatPayload";
+import NotificationService from "@/services/NotificationService";
+import { NotifiableType } from "@/enums/NotifiableType";
+import { UpdateChatPayload } from "@/types/entities/chat/UpdateChatPayload";
 
 class ChatController {
-  socket: Server;
+  private readonly notificationService: NotificationService;
 
-  constructor(socket: Server) {
-    this.socket = socket;
+  constructor(notificationService: NotificationService) {
+    this.notificationService = notificationService;
   }
 
   findAll = async ({ user, set }: ExtendedContext) => {
@@ -32,7 +32,7 @@ class ChatController {
     }
   };
 
-  createOne = async ({ body, set }: ExtendedContext) => {
+  createOne = async ({ body, set, user }: ExtendedContext) => {
     try {
       const newChat = await ChatService.createOne({
         name: (body as CreateChatPayload).name,
@@ -42,12 +42,39 @@ class ChatController {
         chatId: newChat.id,
         membersIds: (body as CreateChatPayload).members_ids,
       });
+      await this.notificationService.createOne({
+        body: `Chat #${newChat.id} was created`,
+        user_id: user.id,
+        notifiable_id: newChat.id,
+        notifiable_type: NotifiableType.NEW_CHAT,
+      });
 
-      this.socket.emit(CHATS_EVENTS.NEW_CHAT, newChat);
       return newChat;
     } catch (error) {
       set.status = 500;
       throw Error("Chat not created");
+    }
+  };
+
+  updateOne = async ({ body, set, params, user }: ExtendedContext) => {
+    try {
+      const chatId = +params["id"];
+      return await ChatService.updateOne(chatId, {
+        name: (body as UpdateChatPayload).name,
+      });
+    } catch (error) {
+      set.status = 500;
+      throw Error("Chat not updated");
+    }
+  };
+
+  deleteOne = async ({ set, params }: ExtendedContext) => {
+    try {
+      const chatId = +params["id"];
+      return await ChatService.deleteOne(chatId);
+    } catch (error) {
+      set.status = 500;
+      throw Error("Chat not deleted");
     }
   };
 }

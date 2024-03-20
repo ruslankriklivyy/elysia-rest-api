@@ -39,9 +39,16 @@ class AuthController {
         path: "/",
       });
 
-      return { user: newUser, access_token: jwtAccessToken };
+      return {
+        user: {
+          id: newUser.id,
+          email: newUser.email,
+          name: newUser.name,
+        },
+        access_token: jwtAccessToken,
+      };
     } catch (error) {
-      console.log(error);
+      throw Error(error as any);
     }
   };
 
@@ -82,7 +89,6 @@ class AuthController {
 
   logout = async ({ cookie, removeCookie }: ExtendedContext) => {
     try {
-      console.log("cookie", cookie);
       await AuthService.logout(cookie.access_token);
       removeCookie("access_token");
     } catch (error) {

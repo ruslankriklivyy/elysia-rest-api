@@ -1,12 +1,16 @@
 import { Server } from "socket.io";
 
 export const createSocket = () => {
-  const io = new Server({});
+  const PORT = Number(process.env.WS_PORT) || 3001;
+  const io = new Server({
+    cookie: true,
+  });
 
   io.on("connection", (socket) => {
-    console.log("CONNECTED!!!");
+    console.log("Websockets is running!");
   });
-  io.listen(3001);
+
+  io.listen(PORT);
 
   return io;
 };

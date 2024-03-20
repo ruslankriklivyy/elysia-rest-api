@@ -1,15 +1,14 @@
-import type { Server } from "socket.io";
-
 import MessageService from "@/services/MessageService";
-import { MESSAGES_EVENTS } from "@/enums/SocketEvent";
 import { ExtendedContext } from "@/types/common/ExtendedContext";
 import { CreateMessagePayload } from "@/types/entities/message/CreateMessagePayload";
+import NotificationService from "@/services/NotificationService";
+import { NotifiableType } from "@/enums/NotifiableType";
 
 class MessageController {
-  socket: Server;
+  protected readonly notificationService: NotificationService;
 
-  constructor(socket: Server) {
-    this.socket = socket;
+  constructor(notificationService: NotificationService) {
+    this.notificationService = notificationService;
   }
 
   findAllByChat = async ({ query, set }: ExtendedContext) => {
@@ -32,7 +31,13 @@ class MessageController {
         sender_id: user.id,
       });
 
-      this.socket.emit(MESSAGES_EVENTS.NEW_MESSAGE, newMessage);
+      await this.notificationService.createOne({
+        body: `Message #${newMessage.id} was created`,
+        user_id: user.id,
+        notifiable_id: newMessage.id,
+        notifiable_type: NotifiableType.NEW_MESSAGE,
+      });
+
       return newMessage;
     } catch (error) {
       set.status = 500;

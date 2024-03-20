@@ -31,14 +31,15 @@ model User {
 }
 
 model Notification {
-  id                Int              @id @default(autoincrement())
-  body              String
-  is_read           Boolean          @default(false)
-  notification_type NotificationType
-  user              User?            @relation(fields: [user_id], references: [id])
-  user_id           Int?
-  created_at        DateTime         @default(now())
-  updated_at        DateTime         @default(now())
+  id              Int            @id @default(autoincrement())
+  body            String
+  is_read         Boolean        @default(false)
+  notifiable_id   Int
+  notifiable_type NotifiableType
+  user            User?          @relation(fields: [user_id], references: [id])
+  user_id         Int?
+  created_at      DateTime       @default(now())
+  updated_at      DateTime       @default(now())
 
   @@map("notifications")
 }
@@ -124,7 +125,9 @@ model File {
   @@map("files")
 }
 
-enum NotificationType {
+enum NotifiableType {
   NEW_CHAT
   NEW_MESSAGE
+  NEW_TASK
+  REMOVE_TASK
 }
