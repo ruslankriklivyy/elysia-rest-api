@@ -21,8 +21,7 @@ class TaskController {
   findOne = async ({ params, set }: ExtendedContext) => {
     try {
       const taskId = +params["id"];
-      const task = await TaskService.findOne({ taskId });
-      return task;
+      return await TaskService.findOne({ taskId });
     } catch (error) {
       set.status = 404;
       throw Error("Task was not found");

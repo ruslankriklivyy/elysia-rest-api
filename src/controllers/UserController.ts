@@ -23,6 +23,17 @@ class UserController {
       throw Error("User not found");
     }
   };
+
+  currentUser = async ({ set, user }: ExtendedContext) => {
+    try {
+      if (!user) throw Error("User not found");
+      const currentUser = await UserService.findOne({ userId: user.id });
+      return omit(currentUser, "password");
+    } catch (error) {
+      console.log(error);
+      set.status = 500;
+    }
+  };
 }
 
 export default new UserController();

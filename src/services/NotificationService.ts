@@ -3,11 +3,9 @@ import { Server } from "socket.io";
 
 import { CreateNotificationPayload } from "@/types/entities/notification/CreateNotificationPayload";
 import { UpdateNotificationPayload } from "@/types/entities/notification/UpdateNotificationPayload";
-import UserService from "@/services/UserService";
 import { NotifiableType } from "@/enums/NotifiableType";
-import ChatService from "@/services/ChatService";
+import ChatsUsersService from "@/services/ChatsUsersService";
 import TaskService from "@/services/TaskService";
-import MessageService from "@/services/MessageService";
 
 class NotificationService {
   private readonly prisma = new PrismaClient();
@@ -31,45 +29,35 @@ class NotificationService {
         notifiable_type,
       },
     });
-    let userHasAccess = false;
-    const user = await UserService.findOne({ userId: user_id });
 
-    switch (notifiable_type) {
-      case NotifiableType.NEW_CHAT: {
-        userHasAccess = !!(await ChatService.findOne(notifiable_id, user_id));
-        break;
+    if (
+      payload.notifiable_type === NotifiableType.NEW_CHAT ||
+      payload.notifiable_type === NotifiableType.NEW_CHAT_MEMBER ||
+      payload.notifiable_type === NotifiableType.NEW_MESSAGE
+    ) {
+      const chats = await ChatsUsersService.findAll(notifiable_id);
+
+      for (const chat of chats) {
+        this.socket
+          .in(`${payload.notifiable_type}.${chat.user_id}`)
+          .emit(payload.notifiable_type, createdNotification);
       }
-
-      case NotifiableType.NEW_CHAT_MEMBER: {
-        userHasAccess = !!(await ChatService.findOne(notifiable_id, user_id));
-        break;
-      }
-
-      case NotifiableType.REMOVE_TASK: {
-        userHasAccess = !!(await TaskService.findOne({
-          taskId: notifiable_id,
-          userId: user_id,
-        }));
-        break;
-      }
-
-      case NotifiableType.NEW_MESSAGE: {
-        const message = await MessageService.findOne({
-          id: notifiable_id,
-          userId: user_id,
-        });
-        userHasAccess = !message
-          ? false
-          : !!(await ChatService.findOne(message.chat_id, user_id));
-        break;
-      }
-
-      default:
-        userHasAccess = false;
     }
 
-    if (userHasAccess) {
-      this.socket.emit(payload.notifiable_type, createdNotification);
+    if (
+      payload.notifiable_type === NotifiableType.NEW_TASK ||
+      payload.notifiable_type === NotifiableType.REMOVE_TASK
+    ) {
+      const task = await TaskService.findOne({
+        taskId: payload.notifiable_id,
+        userId: user_id,
+      });
+
+      if (task) {
+        this.socket
+          .in(`${payload.notifiable_type}.${task.user_id}`)
+          .emit(payload.notifiable_type, createdNotification);
+      }
     }
 
     return createdNotification;

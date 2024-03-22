@@ -1,40 +1,29 @@
 import { Server } from "socket.io";
-import jwt from "jsonwebtoken";
 
-import UserService from "@/services/UserService";
-import TokenService from "@/services/TokenService";
+import { checkAuth } from "@/helpers/checkAuth";
+import buildSocketRooms from "@/helpers/buildSocketRooms";
 
 export const createSocket = () => {
-  const io = new Server({
-    cookie: true,
-  });
+  const io = new Server({ cors: { origin: true } });
 
-  io.on("connection", (socket) => {
-    console.log("Websockets is running!");
+  io.on("connection", () => {
+    console.log("Socket connected");
   });
 
   io.use(async (socket, next) => {
-    const accessToken = socket.handshake.headers.authorization;
+    try {
+      const accessToken = socket.handshake.auth?.["access_token"];
 
-    if (!accessToken) return socket.disconnect();
+      if (!accessToken) throw Error("Access token not provided");
 
-    const jwtData = jwt.verify(accessToken, process.env.JWT_SECRET || "test", {
-      algorithms: ["HS256"],
-    });
+      const { user } = await checkAuth(accessToken);
 
-    if (!jwtData) return socket.disconnect();
+      buildSocketRooms(socket, user.id);
 
-    const userById = await UserService.findOne({
-      email: (jwtData as any)?.data?.email,
-    });
-
-    if (!userById || !accessToken) return socket.disconnect();
-
-    const token = await TokenService.findOne({ accessToken });
-
-    if (!token) return socket.disconnect();
-
-    next();
+      next();
+    } catch (error) {
+      socket.disconnect();
+    }
   });
 
   io.listen(Number(process.env.WS_PORT) || 3001);

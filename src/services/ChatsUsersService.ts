@@ -13,6 +13,18 @@ class ChatsUsersService {
     });
   };
 
+  findAll = (chatId: number) => {
+    return this.prismaClient.chatsUsers.findMany({
+      where: { chat_id: chatId },
+    });
+  };
+
+  findOneByUser = (chatId: number, userId: number) => {
+    return this.prismaClient.chatsUsers.findUnique({
+      where: { user_id_chat_id: { chat_id: chatId, user_id: userId } },
+    });
+  };
+
   upsert = async (payload: CreateChatsUsersPayload) => {
     if (!payload?.membersIds) throw Error("membersIds not provided");
 

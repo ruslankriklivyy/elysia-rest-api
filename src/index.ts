@@ -1,6 +1,7 @@
 import { Elysia } from "elysia";
 import { jwt } from "@elysiajs/jwt";
 import { cookie } from "@elysiajs/cookie";
+import { cors } from "@elysiajs/cors";
 
 import { AuthMiddleware } from "./middlewares/AuthMiddleware";
 import { createSocket } from "./core/socket";
@@ -15,6 +16,27 @@ import AuthController from "@/controllers/AuthController";
 
 const app = new Elysia();
 const socket = createSocket();
+
+// CORS options
+app
+  .onAfterHandle(({ request, set }) => {
+    if (request.method !== "OPTIONS") return;
+
+    const allowHeader = set.headers["Access-Control-Allow-Headers"];
+    if (allowHeader === "*") {
+      set.headers["Access-Control-Allow-Headers"] =
+        request.headers.get("Access-Control-Request-Headers") ?? "";
+    }
+  })
+  .use(
+    cors({
+      origin: true,
+      methods: "*",
+      allowedHeaders: "*",
+      exposedHeaders: "*",
+      credentials: true,
+    })
+  );
 
 app
   .group("/api", (app) =>

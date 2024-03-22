@@ -35,14 +35,12 @@ class AuthService {
 
   async logout(userId: number) {
     try {
-      console.log("user id", userId);
       await this.prisma.token.deleteMany({
         where: { user_id: userId },
       });
 
       return "User is logout";
     } catch (error) {
-      console.log("error: ", error);
       throw new Error("User doesn't logout");
     }
   }
