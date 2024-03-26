@@ -13,6 +13,38 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Role {
+  id                Int                @id @default(autoincrement())
+  name              String
+  slug              String             @unique
+  roles_permissions RolesPermissions[]
+  created_at        DateTime           @default(now())
+  updated_at        DateTime           @default(now())
+
+  @@map("roles")
+}
+
+model Permission {
+  id                Int                @id @default(autoincrement())
+  name              String
+  slug              String             @unique
+  roles_permissions RolesPermissions[]
+  created_at        DateTime           @default(now())
+  updated_at        DateTime           @default(now())
+
+  @@map("permissions")
+}
+
+model RolesPermissions {
+  role          Role       @relation(fields: [role_id], references: [id])
+  role_id       Int
+  permission    Permission @relation(fields: [permission_id], references: [id])
+  permission_id Int
+
+  @@id([role_id, permission_id])
+  @@map("roles_permissions")
+}
+
 model User {
   id            Int            @id @default(autoincrement())
   name          String

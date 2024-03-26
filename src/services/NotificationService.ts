@@ -30,34 +30,37 @@ class NotificationService {
       },
     });
 
-    if (
-      payload.notifiable_type === NotifiableType.NEW_CHAT ||
-      payload.notifiable_type === NotifiableType.NEW_CHAT_MEMBER ||
-      payload.notifiable_type === NotifiableType.NEW_MESSAGE
-    ) {
-      const chats = await ChatsUsersService.findAll(notifiable_id);
+    switch (payload.notifiable_type) {
+      case NotifiableType.NEW_CHAT:
+      case NotifiableType.NEW_CHAT_MEMBER:
+      case NotifiableType.NEW_MESSAGE: {
+        const chatsUsers = await ChatsUsersService.findAll(notifiable_id);
 
-      for (const chat of chats) {
-        this.socket
-          .in(`${payload.notifiable_type}.${chat.user_id}`)
-          .emit(payload.notifiable_type, createdNotification);
+        for (const chatUser of chatsUsers) {
+          this.socket
+            .in(`${payload.notifiable_type}.${chatUser.user_id}`)
+            .emit(payload.notifiable_type, createdNotification);
+        }
+
+        break;
       }
-    }
+      case NotifiableType.NEW_TASK:
+      case NotifiableType.REMOVE_TASK: {
+        const task = await TaskService.findOne({
+          taskId: payload.notifiable_id,
+          userId: user_id,
+        });
 
-    if (
-      payload.notifiable_type === NotifiableType.NEW_TASK ||
-      payload.notifiable_type === NotifiableType.REMOVE_TASK
-    ) {
-      const task = await TaskService.findOne({
-        taskId: payload.notifiable_id,
-        userId: user_id,
-      });
+        if (task) {
+          this.socket
+            .in(`${payload.notifiable_type}.${task.user_id}`)
+            .emit(payload.notifiable_type, createdNotification);
+        }
 
-      if (task) {
-        this.socket
-          .in(`${payload.notifiable_type}.${task.user_id}`)
-          .emit(payload.notifiable_type, createdNotification);
+        break;
       }
+      default:
+        break;
     }
 
     return createdNotification;
